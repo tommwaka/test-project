@@ -1,0 +1,2 @@
+Naproxen;20 gms;1*2;23;250;5750
+Select Drug;20 gms;1*2;09;;0
