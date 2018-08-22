@@ -1,13 +1,12 @@
 <?php
 session_start();
+error_reporting(0);
 include_once('connect_db.php');
-if(isset($_SESSION['username'])){
-$id=$_SESSION['admin_id'];
-$username=$_SESSION['username'];
-}else{
-header("location:http://".$_SERVER['HTTP_HOST'].dirname($_SERVER['PHP_SELF'])."/index.php");
-exit();
+if(strlen($_SESSION['alogin'])==0)
+	{
+header('location:index.php');
 }
+else{
 if(isset($_POST['submit'])){
 $fname=$_POST['first_name'];
 $lname=$_POST['last_name'];
@@ -17,17 +16,41 @@ $phone=$_POST['phone'];
 $email=$_POST['email'];
 $user=$_POST['username'];
 $pas=$_POST['password'];
-$sql1=mysql_query("SELECT * FROM manager WHERE username='$user'")or die(mysql_error());
- $result=mysql_fetch_array($sql1);
- if($result>0){
-$message="<font color=blue>sorry the username entered already exists</font>";
- }else{
-$sql=mysql_query("INSERT INTO manager(first_name,last_name,staff_id,postal_address,phone,email,username,password,date)
-VALUES('$fname','$lname','$sid','$postal','$phone','$email','$user','$pas',NOW())");
-if($sql>0) {header("location:http://".$_SERVER['HTTP_HOST'].dirname($_SERVER['PHP_SELF'])."/admin_manager.php");
+$sql ="SELECT * FROM manager WHERE username=:user";
+$query= $dbh -> prepare($sql);
+$query-> bindParam(':fname', $fname, PDO::PARAM_STR);
+$query-> bindParam(':lname', $lname, PDO::PARAM_STR);
+$query-> bindParam(':sid', $sid, PDO::PARAM_STR);
+$query-> bindParam(':postal', $postal, PDO::PARAM_STR);
+$query-> bindParam(':phone', $phone, PDO::PARAM_STR);
+$query-> bindParam(':email', $email, PDO::PARAM_STR);
+$query-> bindParam(':user', $user, PDO::PARAM_STR);
+$query-> bindParam(':pas', $pas, PDO::PARAM_STR);
+$query-> execute();
+$results=$query->fetchAll(PDO::FETCH_OBJ);
+
 }else{
-$message1="<font color=red>Registration Failed, Try again</font>";
+    $sql1="INSERT INTO manager(first_name,last_name,staff_id,postal_address,phone,email,username,password,date)
+    VALUES(:fname,:lname,:sid,:postal,:phone,:email,:user,:pas,NOW())";
+    $query= $dbh -> prepare($sql1);
+    $query-> bindParam(':fname', $fname, PDO::PARAM_STR);
+    $query-> bindParam(':lname', $lname, PDO::PARAM_STR);
+    $query-> bindParam(':sid', $sid, PDO::PARAM_STR);
+    $query-> bindParam(':postal', $postal, PDO::PARAM_STR);
+    $query-> bindParam(':phone', $phone, PDO::PARAM_STR);
+    $query-> bindParam(':email', $email, PDO::PARAM_STR);
+    $query-> bindParam(':user', $user, PDO::PARAM_STR);
+    $query-> bindParam(':pas', $pas, PDO::PARAM_STR);
+    $query-> execute();
+    $lastInsertId = $dbh->lastInsertId();
+if($lastInsertId){
+    if($query->rowCount() > 0)
+{
+$_SESSION['alogin']=$_POST['username'];
+echo "<script type='text/javascript'> document.location = 'admin_pharmacist.php'; </script>";
 }
+}
+
 	}}
 ?>
 
@@ -168,8 +191,8 @@ $message1="<font color=red>Registration Failed, Try again</font>";
                             </div>
                             <div class="user-info">
                                 <?php  session_start();
-							if(!empty($_SESSION["username"])) {
-						   echo "Hello, {$_SESSION["username"]}";
+							if(!empty($_SESSION["alogin"])) {
+						   echo htmlentities($_SESSION['alogin']);
 							}
 							else{
 							  echo "You're not logged in!!";
@@ -183,18 +206,7 @@ $message1="<font color=red>Registration Failed, Try again</font>";
                         </div>
                         <!--end user image section-->
                     </li>
-                    <li class="sidebar-search">
-                        <!-- search section-->
-                        <div class="input-group custom-search-form">
-                            <input type="text" class="form-control" placeholder="Search...">
-                            <span class="input-group-btn">
-                                <button class="btn btn-default" type="button">
-                                    <i class="fa fa-search"></i>
-                                </button>
-                            </span>
-                        </div>
-                        <!--end search section-->
-                    </li>
+                   
                     <li class="selected">
                         <a href="admin.php"><i class="fa fa-dashboard fa-fw"></i>Dashboard</a>
                     </li>
@@ -252,7 +264,7 @@ $message1="<font color=red>Registration Failed, Try again</font>";
             <div class="row">
                 <!-- Page Header -->
                 <div class="col-lg-12">
-                    <h1 class="page-header">manage Manager</h1>
+                    <h1 class="page-header">Manager</h1>
                 </div>
                 <!--End Page Header -->
             </div>
@@ -260,37 +272,48 @@ $message1="<font color=red>Registration Failed, Try again</font>";
 
 
 <div id="tab_content_1" class="tab active">
-<?php
-include_once('connect_db.php');
-$result=mysql_query("select * from manager")or die(mysql_error);
+<form name="chngpwd" method="post" onSubmit="return valid();">
+          		
+          	<p>
+          	<table border="" width="100%" class="table table-striped">
+          <tr align="center">
+          <th>#</th>
+          <th>Staff ID</th>
+   <th>Firstname</th>
+   <th>Lastname</th>
+   <th>Username</th>
+   <th>Update</th>
+   <th>Delete</th>
+          </tr>
+          <?php
+include ('connect_db.php');
 
-    echo "<table boarder='1' cell padding='5' align='center'>
- <tr>
-<th>ID</th>
-<th>Firstname</th>
-<th>Lastname</th>
-<th>Username</th>
-<th>Update</th>
-<th>Delete</th></tr>";
-while($row=mysql_fetch_array($result)){
-  echo "<tr>";
-  echo '<td>'.$row['manager_id'].'</td>';
-  echo '<td>'.$row['first_name'].'</td>';
-  echo '<td>'.$row['last_name'].'</td>';
-  echo '<td>'.$row['username'].'</td>';
-  ?>
-<td><a href="update_manager.php?username=<?php echo $row['username']?>"><img src="images/update-icon.png" width="35" height="35" border="0" /></a></td>
-<td><a href="del_manager.php?manager_id=<?php echo $row['manager_id']?>"><img src="images/delete-icon.jpg" width="35" height="35" border="0" /></a></td>
-<?php
-   }
-      // close table>
-      echo "</table>";
+          $sql = "SELECT * from manager ";
+          $query = $dbh->prepare($sql);
+          $query->execute();
+          $results=$query->fetchAll(PDO::FETCH_OBJ);
+          $cnt=1;
+          if($query->rowCount() > 0)
+          { 
+          foreach($results as $result)
+          {	?>
+           
+          <tr align="center">
+          <td><?php echo htmlentities($cnt);?></td>
+          <td><?php echo htmlentities($result->staff_id);?></td>
+            <td><?php echo htmlentities($result->first_name);?></td>
+            <td><?php echo htmlentities($result->last_name);?></td>
+             <td><?php echo htmlentities($result->username);?></td>
+          <td> <a href="update_manager.php?pid=<?php echo htmlentities($result -> manager_id);?>" class= "btn btn-success" >update</a></td>
+          <td> <a href="del_manager.php?manager_id=<?php echo htmlentities($result -> manager_id);?>" class= "btn btn-warning" >Delete</a></td>
+          </tr>
+          <?php $cnt=$cnt+1; }} ?>
+          	</table>
 
-?>
+          			</p>
+                      <button formaction="add_manager.php" class= "btn btn-success">New Manager</button>
+          			</form>
 
-<form>
-  <button formaction="add_manager.php">New Manager</button>
-</form>
   		</div>
 
 

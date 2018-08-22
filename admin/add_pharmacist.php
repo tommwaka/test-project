@@ -1,35 +1,41 @@
 <?php
 session_start();
-include_once('connect_db.php');
-if(isset($_SESSION['username'])){
-$id=$_SESSION['admin_id'];
-$username=$_SESSION['username'];
-}else{
-header("location:http://".$_SERVER['HTTP_HOST'].dirname($_SERVER['PHP_SELF'])."/index.php");
-exit();
+error_reporting(0);
+include ('connect_db.php');
+if(strlen($_SESSION['alogin'])==0)
+	{
+header('location:index.php');
 }
-if(isset($_POST['submit'])){
-$fname=$_POST['first_name'];
-$lname=$_POST['last_name'];
-$sid=$_POST['staff_id'];
-$postal=$_POST['postal_address'];
-$phone=$_POST['phone'];
-$email=$_POST['email'];
-$user=$_POST['username'];
-$pas=$_POST['password'];
-$sql1=mysql_query("SELECT * FROM pharmacist WHERE username='$user'")or die(mysql_error());
- $result=mysql_fetch_array($sql1);
- if($result>0){
-$message="<font color=blue>sorry the username entered already exists</font>";
- }else{
-$sql=mysql_query("INSERT INTO pharmacist(first_name,last_name,staff_id,postal_address,phone,email,username,password,date)
-VALUES('$fname','$lname','$sid','$postal','$phone','$email','$user','$pas',NOW())");
-if($sql>0) {header("location:http://".$_SERVER['HTTP_HOST'].dirname($_SERVER['PHP_SELF'])."/admin_pharmacist.php");
-}else{
-$message1="<font color=red>Registration Failed, Try again</font>";
+else{
+if(isset($_POST['submit']))
+{
+    $fname=$_POST['first_name'];
+    $lname=$_POST['last_name'];
+    $sid=$_POST['staff_id'];
+    $postal=$_POST['postal_address'];
+    $phone=$_POST['phone'];
+    $email=$_POST['email'];
+    $user=$_POST['username'];
+    $pass=$_POST['password'];
+
+$sql="INSERT INTO pharmacist(first_name,last_name,staff_id,postal_address,phone,email,username,password) VALUES(:fname,:lname,:sid,:postal,:phone,:email,:user,:pass)";
+$query = $dbh->prepare($sql);
+$query->bindParam(':fname',$fname,PDO::PARAM_STR);
+$query->bindParam(':lname',$lname,PDO::PARAM_STR);
+$query->bindParam(':sid',$sid,PDO::PARAM_STR);
+$query->bindParam(':postal',$postal,PDO::PARAM_STR);
+$query->bindParam(':phone',$phone,PDO::PARAM_STR);
+$query->bindParam(':email',$email,PDO::PARAM_STR);
+$query->bindParam(':user',$user,PDO::PARAM_STR);
+$query->bindParam(':pass',$pass,PDO::PARAM_STR);
+$query->execute();
+
+echo "<script type='text/javascript'> document.location = 'admin_pharmacist.php'; </script>";
+
 }
-	}}
-?>
+
+	?>
+
 
 
 <!DOCTYPE html>
@@ -168,8 +174,8 @@ $message1="<font color=red>Registration Failed, Try again</font>";
                             </div>
                             <div class="user-info">
                                 <?php  session_start();
-							if(!empty($_SESSION["username"])) {
-						   echo "Hello, {$_SESSION["username"]}";
+							if(!empty($_SESSION["alogin"])) {
+						   echo htmlentities ($_SESSION['alogin']);
 							}
 							else{
 							  echo "You're not logged in!!";
@@ -247,9 +253,9 @@ $message1="<font color=red>Registration Failed, Try again</font>";
             <!-- end sidebar-collapse -->
         </nav>
         <!-- end navbar side -->
-        <div id="page-wrapper">
+          <div id="page-wrapper">
 
-            <div class="row">
+           <div class="grid-form">
                 <!-- Page Header -->
                 <div class="col-lg-12">
                     <h1 class="page-header">New Pharmacist</h1>
@@ -257,75 +263,75 @@ $message1="<font color=red>Registration Failed, Try again</font>";
                 <!--End Page Header -->
             </div>
 
-<div class="row" align="left">
-  <form name="myform" onsubmit="return validateForm(this);"  method="post" action="add_pharmacist.php">
-  <div class="form-row" align="left">
-      <div class="col-md-4"></div>
-        <div class="form-group col-md-4">
-          <label for="name">Firstname:</label>
-          <input type="text" id="first_name" class="form-control" name="first_name">
+  <div class="tab-content">
+						<div class="tab-pane active" id="horizontal-form">
+
+
+
+
+  <form class="form-horizontal" name="package" method="post" enctype="multipart/form-data">
+
+  <div class="form-group">
+	<label for="focusedinput" class="col-sm-2 control-label">First name:</label>
+		<div class="col-sm-8">
+          <input type="text" id="first_name"  class="form-control1" name="first_name" value=""  required>
         </div>
       </div>
 
-      <div class="form-row" align="left">
-          <div class="col-md-4"></div>
-            <div class="form-group col-md-4">
-              <label for="name">Lastname:</label>
-              <input type="text" id="last_name" class="form-control" name="last_name">
+     <div class="form-group">
+	<label for="focusedinput" class="col-sm-2 control-label">Last name:</label>
+		<div class="col-sm-8">
+              <input type="text" id="last_name" class="form-control" name="last_name" value=""  required>
             </div>
           </div>
 
-          <div class="form-row" align="left">
-              <div class="col-md-4"></div>
-                <div class="form-group col-md-4">
-                  <label for="staffid">Staff ID:</label>
-                  <input type="text" id="staff_id" class="form-control" name="staff_id">
+          <div class="form-group">
+	<label for="focusedinput" class="col-sm-2 control-label">Staff ID:</label>
+		<div class="col-sm-8">
+                  <input type="text" id="staff_id"  class="form-control" name="staff_id" value=""   required>
                 </div>
               </div>
 
-              <div class="form-row" align="left">
-                  <div class="col-md-4"></div>
-                    <div class="form-group col-md-4">
-                      <label for="address">Postal Address:</label>
-                      <input type="text" id="postal_address" class="form-control" name="postal_address">
+             <div class="form-group">
+	<label for="focusedinput" class="col-sm-2 control-label">Postal Address:</label>
+		<div class="col-sm-8">
+                      <input type="text" id="postal_address" class="form-control" name="postal_address" value=""  required>
                     </div>
                   </div>
 
-                  <div class="form-row" align="left">
-                      <div class="col-md-4"></div>
-                        <div class="form-group col-md-4">
-                          <label for="phone">Phone:</label>
-                          <input type="text" id="phone" class="form-control" name="phone">
+                  <div class="form-group">
+	<label for="focusedinput" class="col-sm-2 control-label">Phone Number:</label>
+		<div class="col-sm-8">
+                          <input type="text" id="phone" class="form-control" name="phone" value=""  required>
                         </div>
                       </div>
 
-                      <div class="form-row" align="left">
-                          <div class="col-md-4"></div>
-                            <div class="form-group col-md-4">
-                              <label for="email">Email:</label>
-                              <input type="email" id="email" class="form-control" name="email">
+                      <div class="form-group">
+	<label for="focusedinput" class="col-sm-2 control-label">Email Address:</label>
+		<div class="col-sm-8">
+                              <input type="email" id="email" class="form-control" name="email" value=""  required>
                             </div>
                           </div>
 
-                          <div class="form-row" align="left">
-                              <div class="col-md-4"></div>
-                                <div class="form-group col-md-4">
-                                  <label for="username">Username:</label>
-                                  <input type="text" id="username" class="form-control" name="username">
+                          <div class="form-group">
+	<label for="focusedinput" class="col-sm-2 control-label">Username:</label>
+		<div class="col-sm-8">
+                                  <input type="text" id="username" class="form-control" name="username" value=""   required>
                                 </div>
                               </div>
 
-                              <div class="form-row" align="left">
-                                  <div class="col-md-4"></div>
-                                    <div class="form-group col-md-4">
-                                      <label for="password">Password:</label>
-                                      <input type="password" id="password" class="form-control" name="password">
+                             <div class="form-group">
+	<label for="focusedinput" class="col-sm-2 control-label">Password:</label>
+		<div class="col-sm-8">
+                                      <input type="password" id="password" class="form-control" name="password" value=""  required>
                                     </div>
                                   </div>
+                                  
                                   <div class="form-row" align="left">
                                     <div class="col-md-4"></div>
                                       <div class="form-group col-md-4">
-                                      <button type="reset" value="reset" name="reset" class="btn btn-success" style="margin-left:38px">Cancel</button>
+                                      
+    <button type="reset" value="reset" name="reset" class="btn btn-primary" style="margin-left:38px">Cancel</button>
 
                                       <button type="submit" value="submit" name="submit" class="btn btn-success" style="margin-left:38px">Submit</button>
                                     </div>
@@ -353,3 +359,4 @@ $message1="<font color=red>Registration Failed, Try again</font>";
 
 </body>
 </html>
+<?php } ?>

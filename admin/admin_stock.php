@@ -1,15 +1,16 @@
+
 <?php
 session_start();
+error_reporting(0);
 include_once('connect_db.php');
-if(isset($_SESSION['username'])){
-	$id=$_SESSION['pharmacist_id'];
-	$user=$_SESSION['username'];
-}else{
-header("location:http://".$_SERVER['HTTP_HOST'].dirname($_SERVER['PHP_SELF'])."index.php");
-exit();
+if(strlen($_SESSION['alogin'])==0)
+	{
+header('location:index.php');
 }
+else{
 if(isset($_POST['submit'])){
-	$sname=$_POST['drug_name'];
+    $id=$_POST['stock_id'];
+    $sname=$_POST['drug_name'];
 	$cat=$_POST['category'];
 	$des=$_POST['description'];
 	$com=$_POST['company'];
@@ -17,67 +18,121 @@ if(isset($_POST['submit'])){
 	$qua=$_POST['quantity'];
 	$cost=$_POST['cost'];
 	$sta="Available";
+$sql ="SELECT * FROM stock WHERE stock_id=:id";
+$query= $dbh -> prepare($sql);
+$query-> bindParam(':id', $id, PDO::PARAM_INT);
+$query-> bindParam(':sname', $sname, PDO::PARAM_STR);
+$query-> bindParam(':cat', $cat, PDO::PARAM_STR);
+$query-> bindParam(':des', $des, PDO::PARAM_STR);
+$query-> bindParam(':com', $com, PDO::PARAM_STR);
+$query-> bindParam(':sup', $sup, PDO::PARAM_STR);
+$query-> bindParam(':qua', $qua, PDO::PARAM_STR);
+$query-> bindParam(':cost', $cost, PDO::PARAM_INT);
+$query-> bindParam(':sta', $sta, PDO::PARAM_STR);
+$query-> execute();
+$results=$query->fetchAll(PDO::FETCH_OBJ);
 
-	$sql=mysql_query("INSERT into stock(drug_name,category,description,company,supplier,quantity,cost,status,date_supplied)
-	VALUES('$sname','$cat','$des','$com','$sup','$qua','$cost','$sta',NOW())");
-	if($sql>0) {header("location:http://".$_SERVER['HTTP_HOST'].dirname($_SERVER['PHP_SELF'])."/stock_pharmacist.php");
 }else{
-$message1="<font color=red>Registration Failed, Try again</font>";
+    $sql1="INSERT INTO stock(drug_name,category,description,company,supplier,quantity,cost,status,date_supplied)
+    VALUES(:sname,:cat,:des,:com,:sup,:qua,:cost,:sta,NOW())";
+    $query= $dbh -> prepare($sql1);
+    $query-> bindParam(':id', $id, PDO::PARAM_INT);
+    $query-> bindParam(':sname', $sname, PDO::PARAM_STR);
+    $query-> bindParam(':cat', $cat, PDO::PARAM_STR);
+    $query-> bindParam(':des', $des, PDO::PARAM_STR);
+    $query-> bindParam(':com', $com, PDO::PARAM_STR);
+    $query-> bindParam(':sup', $sup, PDO::PARAM_STR);
+    $query-> bindParam(':qua', $qua, PDO::PARAM_STR);
+    $query-> bindParam(':cost', $cost, PDO::PARAM_INT);
+    $query-> bindParam(':sta', $sta, PDO::PARAM_STR);
+    $query-> execute();
+    $lastInsertId = $dbh->lastInsertId();
+if($lastInsertId){
+    if($query->rowCount() > 0)
+{
+$_SESSION['alogin']=$_POST['username'];
+echo "<script type='text/javascript'> document.location = 'admin_pharmacist.php'; </script>";
 }
-	}
+}
 
- ?>
- <!DOCTYPE html>
+	}}
+?>
+
+
+<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pharmcare sys</title>
     <!-- Core CSS - Include with every page -->
+    <link rel="stylesheet" type="text/css" href="style/mystyle.css">
+    <link rel="stylesheet" href="style/style.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="style/table.css" type="text/css" media="screen" />
+    <script src="js/function.js" type="text/javascript"></script>
     <link href="assets/plugins/bootstrap/bootstrap.css" rel="stylesheet" />
     <link href="assets/font-awesome/css/font-awesome.css" rel="stylesheet" />
     <link href="assets/plugins/pace/pace-theme-big-counter.css" rel="stylesheet" />
     <link href="assets/css/style.css" rel="stylesheet" />
     <link href="assets/css/main-style.css" rel="stylesheet" />
-	<link rel="stylesheet" type="text/css" href="style/mystyle.css">
-	<link rel="stylesheet" type="text/css" href="style/table.css">
-
+	<link rel="stylesheet" type="text/css" href="style/mystyle_login.css">
     <!-- Page-Level CSS -->
     <link href="assets/plugins/morris/morris-0.4.3.min.css" rel="stylesheet" />
-	<script src="js/function.js" type="text/javascript"></script>
-<script type="text/javascript" SRC="js/jquery-1.4.2.min.js"></script>
-	<script type="text/javascript" SRC="js/superfish/hoverIntent.js"></script>
-	<script type="text/javascript" SRC="js/superfish/superfish.js"></script>
-	<script type="text/javascript" SRC="js/superfish/supersubs.js"></script>
-	<script type="text/javascript">
-		$(document).ready(function(){
-			$("ul.sf-menu").supersubs({
-				minWidth:    12,
-				maxWidth:    27,
-				extraWidth:  1
+    <script src="js/function.js" type="text/javascript"></script>
+    <script>
+    function validateForm()
+    {
 
-			}).superfish();
+    //for alphabet characters only
+    var str=document.myform.first_name.value;
+    	var valid="abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    	//comparing user input with the characters one by one
+    	for(i=0;i<str.length;i++)
+    	{
+    	//charAt(i) returns the position of character at specific index(i)
+    	//indexOf returns the position of the first occurence of a specified value in a string. this method returns -1 if the value to search for never ocurs
+    	if(valid.indexOf(str.charAt(i))==-1)
+    	{
+    	alert("First Name Cannot Contain Numerical Values");
+    	document.myform.first_name.value="";
+    	document.myform.first_name.focus();
+    	return false;
+    	}}
 
-		});
-	</script>
-	<script>
-function validateForm() {
-    var value = document.myform.customer_name.value;
-	if(value.match(/^[a-zA-Z]+(\s{1}[a-zA-Z]+)*$/)) {
-        return true;
-    } else {
-        alert('Name Cannot contain numbers');
-        return false;
+    if(document.myform.first_name.value=="")
+    {
+    alert("Name Field is Empty");
+    return false;
     }
-}
-</script>
-	<script SRC="js/cufon-yui.js" type="text/javascript"></script>
-	<script SRC="js/Liberation_Sans_font.js" type="text/javascript"></script>
-	<script SRC="js/jquery.pngFix.pack.js"></script>
-	<script type="text/javascript">
-		Cufon.replace('h1,h2,h3,h4,h5,h6');
-		Cufon.replace('.logo', { color: '-linear-gradient(0.5=#FFF, 0.7=#DDD)' });
-	</script>
+
+    //for alphabet characters only
+    var str=document.myform.last_name.value;
+    	var valid="abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    	//comparing user input with the characters one by one
+    	for(i=0;i<str.length;i++)
+    	{
+    	//charAt(i) returns the position of character at specific index(i)
+    	//indexOf returns the position of the first occurence of a specified value in a string. this method returns -1 if the value to search for never ocurs
+    	if(valid.indexOf(str.charAt(i))==-1)
+    	{
+    	alert("Last Name Cannot Contain Numerical Values");
+    	document.myform.last_name.value="";
+    	document.myform.last_name.focus();
+    	return false;
+    	}}
+
+
+    if(document.myform.last_name.value=="")
+    {
+    alert("Name Field is Empty");
+    return false;
+    }
+
+    }
+
+    </script>
+
+
    </head>
 <body>
     <!--  wrapper -->
@@ -140,8 +195,8 @@ function validateForm() {
                             </div>
                             <div class="user-info">
                                 <?php  session_start();
-							if(!empty($_SESSION["username"])) {
-						   echo "Hello, {$_SESSION["username"]}";
+							if(!empty($_SESSION["alogin"])) {
+						   echo htmlentities($_SESSION['alogin']);
 							}
 							else{
 							  echo "You're not logged in!!";
@@ -155,19 +210,8 @@ function validateForm() {
                         </div>
                         <!--end user image section-->
                     </li>
-                    <li class="sidebar-search">
-                        <!-- search section-->
-                        <div class="input-group custom-search-form">
-                            <input type="text" class="form-control" placeholder="Search...">
-                            <span class="input-group-btn">
-                                <button class="btn btn-default" type="button">
-                                    <i class="fa fa-search"></i>
-                                </button>
-                            </span>
-                        </div>
-                        <!--end search section-->
-                    </li>
-                    <li >
+                   
+                    <li class="selected">
                         <a href="admin.php"><i class="fa fa-dashboard fa-fw"></i>Dashboard</a>
                     </li>
                     <li>
@@ -195,12 +239,12 @@ function validateForm() {
                      <li>
                         <a href="#"><i class="fa fa-medkit fa-fw"></i> Drugs<span class="fa arrow"></span></a>
                         <ul class= "nav nav-second-level">
-                        <li>
-                        <a href="admin_stock.php">View Drugs</a>
-                        </li>
-                        <li>
-                        <a href="admin_add_med.php">Add Drugs</a>
-                        </li>
+                          <li>
+                          <a href="admin_stock.php">View Drugs</a>
+                          </li>
+                          <li>
+                          <a href="admin_add_med.php">Add Drugs</a>
+                          </li>
 
                          </ul>
                                      </li>
@@ -215,77 +259,88 @@ function validateForm() {
 
                 </ul>
                 <!-- end side-menu -->
-
             </div>
             <!-- end sidebar-collapse -->
+        </nav>
+        <!-- end navbar side -->
+        <div id="page-wrapper">
 
-
-		 <nav class="navbar navbar-default navbar-fixed-bottom" role="navigation" id="navbar">
-		 <div class="footer" align="Center"> life is good</div></nav>
-
-		 </nav>
-
-		 <div id="page-wrapper">
-
-
-
-
-<div id="row" align="center">
-
-<div class="row">
+            <div class="row">
                 <!-- Page Header -->
                 <div class="col-lg-12">
                     <h1 class="page-header">Stock</h1>
                 </div>
                 <!--End Page Header -->
             </div>
+<div class="tabs">
 
-<div id="content_1" class="content">
-	<?php
-	include_once('connect_db.php');
-	$result=mysql_query("select * from stock")or die(mysql_error);
 
-      echo "<table boarder='1' cell padding='5' align='center'>;
-	<tr>
-	<th>ID</th>
-	<th>Name</th>
+<div id="tab_content_1" class="tab active">
+<form name="chngpwd" method="post" onSubmit="return valid();">
+          		
+          	<p>
+          	<table border="" width="100%" class="table table-striped">
+          <tr align="center">
+          <th>#</th>
+          <th>Name</th>
 	<th>Category</th>
 	<th>Description</th>
 	<th>Status</th>
 	<th>Date</th>
     <th>Expiry Date</th>
-	<th>Delete</th></tr>";
-	while($row=mysql_fetch_array($result)){
-		echo "<tr>";
-		echo '<td>' . $row['stock_id'] . '</td>';
-		echo '<td>'.$row['drug_name'].'</td>';
-		echo '<td>'.$row['category'].'</td>';
-		echo '<td>'.$row['description'].'</td>';
-		echo '<td>'.$row['status'].'</td>';
-		echo '<td>'.$row['date_supplied'].'</td>';
-        echo '<td>'.$row['exp_date'].'</td>';
-		?>
-	<td><a href="delete_stock.php?stock_id=<?php echo $row['stock_id']?>">
-				<img src="images/delete-icon.jpg" width="20" height="20" border="0" /></a></td>
-         <?php
-		 }
-        // close table>
-        echo "</table>";
-?>
-</div>
-</div>
-</div>
+	<th>Delete</th></tr>
+          </tr>
+          <?php
+include ('connect_db.php');
+
+          $sql = "SELECT * from stock ";
+          $query = $dbh->prepare($sql);
+          $query->execute();
+          $results=$query->fetchAll(PDO::FETCH_OBJ);
+          $cnt=1;
+          if($query->rowCount() > 0)
+          { 
+          foreach($results as $result)
+          {	?>
+           
+          <tr align="center">
+          <td><?php echo htmlentities($cnt);?></td>
+          <td><?php echo htmlentities($result->drug_name);?></td>
+            <td><?php echo htmlentities($result->category);?></td>
+            <td><?php echo htmlentities($result->description);?></td>
+             <td><?php echo htmlentities($result->status);?></td>
+             <td><?php echo htmlentities($result->date_supplied);?></td>
+             <td><?php echo htmlentities($result->exp_date);?></td>
+          <td> <a href="delete_stock.php?stock_id=<?php echo htmlentities($result -> stock_id);?>" class= "btn btn-warning" >Delete</a></td>
+          
+          </tr>
+          <?php $cnt=$cnt+1; }} ?>
+          	</table>
+
+          			</p>
+                      <button formaction="admin_add_med.php" class= "btn btn-success">Add Medicine</button>
+          			</form>
+
+  		</div>
 
 
- <!-- Core Scripts - Include with every page -->
-    <script src="assets/plugins/jquery-1.10.2.js"></script>
-    <script src="assets/plugins/bootstrap/bootstrap.min.js"></script>
-    <script src="assets/plugins/metisMenu/jquery.metisMenu.js"></script>
-    <script src="assets/plugins/pace/pace.js"></script>
-    <script src="assets/scripts/siminta.js"></script>
-    <!-- Page-Level Plugin Scripts-->
-    <script src="assets/plugins/morris/raphael-2.1.0.min.js"></script>
-    <script src="assets/plugins/morris/morris.js"></script>
-    <script src="assets/scripts/dashboard-demo.js"></script>
-</body>
-</html>
+</div>
+                </div>
+                <!-- end page-wrapper -->
+
+            </div>
+            <!-- end wrapper -->
+
+            <!-- Core Scripts - Include with every page -->
+            <script src="assets/plugins/jquery-1.10.2.js"></script>
+            <script src="assets/plugins/bootstrap/bootstrap.min.js"></script>
+            <script src="assets/plugins/metisMenu/jquery.metisMenu.js"></script>
+            <script src="assets/plugins/pace/pace.js"></script>
+            <script src="assets/scripts/siminta.js"></script>
+            <!-- Page-Level Plugin Scripts-->
+            <script src="assets/plugins/morris/raphael-2.1.0.min.js"></script>
+            <script src="assets/plugins/morris/morris.js"></script>
+            <script src="assets/scripts/dashboard-demo.js"></script>
+
+        </body>
+        </html>

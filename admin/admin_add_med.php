@@ -1,94 +1,72 @@
+
 <?php
 session_start();
-include_once('connect_db.php');
-if(isset($_SESSION['username'])){
-	$id=$_SESSION['pharmacist_id'];
-	$user=$_SESSION['username'];
-}else{
-header("location:http://".$_SERVER['HTTP_HOST'].dirname($_SERVER['PHP_SELF'])."index.php");
-exit();
+error_reporting(0);
+include_once ('connect_db.php');
+if(strlen($_SESSION['alogin'])==0)
+	{
+header('location:index.php');
 }
+else{
 if(isset($_POST['submit'])){
-	$sname=$_POST['drug_name'];
+    
+    $sname=$_POST['drug_name'];
 	$cat=$_POST['category'];
 	$des=$_POST['description'];
 	$com=$_POST['company'];
 	$sup=$_POST['supplier'];
 	$qua=$_POST['quantity'];
 	$cost=$_POST['cost'];
-	$sta="Available";
-    $exp=$_POST['exp_date'];
-
-	$sql=mysql_query("INSERT into stock(drug_name,category,description,company,supplier,quantity,cost,status,date_supplied,exp_date)
-	VALUES('$sname','$cat','$des','$com','$sup','$qua','$cost','$sta',NOW(),'$exp')");
-	if($sql>0) {header("location:http://".$_SERVER['HTTP_HOST'].dirname($_SERVER['PHP_SELF'])."/stock_pharm.php");
-}else{
-$message1="<font color=red>Registration Failed, Try again</font>";
+    //$sta='status';
+    $edate=$_POST['exp_date'];
+    
+    $sql1="INSERT INTO stock(drug_name,category,description,company,supplier,quantity,cost,exp_date)
+    VALUES(:sname,:cat,:des,:com,:sup,:qua,:cost,:edate)";
+    $query= $dbh -> prepare($sql1);
+    $query-> bindParam(':sname', $sname, PDO::PARAM_STR);
+    $query-> bindParam(':cat', $cat, PDO::PARAM_STR);
+    $query-> bindParam(':des', $des, PDO::PARAM_STR);
+    $query-> bindParam(':com', $com, PDO::PARAM_STR);
+    $query-> bindParam(':sup', $sup, PDO::PARAM_STR);
+    $query-> bindParam(':qua', $qua, PDO::PARAM_STR);
+    $query-> bindParam(':cost', $cost, PDO::PARAM_STR);
+    //$query-> bindParam(':sta', $sta, PDO::PARAM_STR);
+    $query-> bindParam(':edate', $edate, PDO::PARAM_STR);
+    $query-> execute();
+    $lastInsertId = $dbh->lastInsertId();
+if($lastInsertId){
+    if($query->rowCount() > 0)
+{
+echo "<script type='text/javascript'> document.location = 'admin_stock.php'; </script>";
 }
-	}
+}
 
- ?>
- <!DOCTYPE html>
+	}}
+?>
+
+
+<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pharmcare sys</title>
     <!-- Core CSS - Include with every page -->
+    <link rel="stylesheet" type="text/css" href="style/mystyle.css">
+    <link rel="stylesheet" href="style/style.css" type="text/css" media="screen" />
+    <link rel="stylesheet" href="style/table.css" type="text/css" media="screen" />
+    <script src="js/function.js" type="text/javascript"></script>
     <link href="assets/plugins/bootstrap/bootstrap.css" rel="stylesheet" />
     <link href="assets/font-awesome/css/font-awesome.css" rel="stylesheet" />
     <link href="assets/plugins/pace/pace-theme-big-counter.css" rel="stylesheet" />
     <link href="assets/css/style.css" rel="stylesheet" />
     <link href="assets/css/main-style.css" rel="stylesheet" />
-	<link rel="stylesheet" type="text/css" href="style/mystyle.css">
-	<link rel="stylesheet" type="text/css" href="style/table.css">
-
+	<link rel="stylesheet" type="text/css" href="style/mystyle_login.css">
     <!-- Page-Level CSS -->
     <link href="assets/plugins/morris/morris-0.4.3.min.css" rel="stylesheet" />
-	<script src="js/function.js" type="text/javascript"></script>
-<script type="text/javascript" SRC="js/jquery-1.4.2.min.js"></script>
-	<script type="text/javascript" SRC="js/superfish/hoverIntent.js"></script>
-    <script src="http://code.jquery.com/ui/1.10.1/jquery-ui.js"></script>
-	<script type="text/javascript" SRC="js/superfish/superfish.js"></script>
-	<script type="text/javascript" SRC="js/superfish/supersubs.js"></script>
-     <link rel="stylesheet" href="datepicker.css">
-  <script type="text/javascript" src="js/bootstrap-datepicker.js"></script>
+    <script src="js/function.js" type="text/javascript"></script>
+   
 
-  <link rel="stylesheet" href="/resources/demos/style.css" />
-    <script>
-    $(function() {
-         $( "#datepicker" ).datepicker();
-    });
-</script>
-	<script type="text/javascript">
-		$(document).ready(function(){
-			$("ul.sf-menu").supersubs({
-				minWidth:    12,
-				maxWidth:    27,
-				extraWidth:  1
-
-			}).superfish();
-
-		});
-	</script>
-	<script>
-function validateForm() {
-    var value = document.myform.customer_name.value;
-	if(value.match(/^[a-zA-Z]+(\s{1}[a-zA-Z]+)*$/)) {
-        return true;
-    } else {
-        alert('Name Cannot contain numbers');
-        return false;
-    }
-}
-</script>
-	<script SRC="js/cufon-yui.js" type="text/javascript"></script>
-	<script SRC="js/Liberation_Sans_font.js" type="text/javascript"></script>
-	<script SRC="js/jquery.pngFix.pack.js"></script>
-	<script type="text/javascript">
-		Cufon.replace('h1,h2,h3,h4,h5,h6');
-		Cufon.replace('.logo', { color: '-linear-gradient(0.5=#FFF, 0.7=#DDD)' });
-	</script>
    </head>
 <body>
     <!--  wrapper -->
@@ -151,8 +129,8 @@ function validateForm() {
                             </div>
                             <div class="user-info">
                                 <?php  session_start();
-							if(!empty($_SESSION["username"])) {
-						   echo "Hello, {$_SESSION["username"]}";
+							if(!empty($_SESSION["alogin"])) {
+						   echo htmlentities ($_SESSION['alogin']);
 							}
 							else{
 							  echo "You're not logged in!!";
@@ -166,19 +144,8 @@ function validateForm() {
                         </div>
                         <!--end user image section-->
                     </li>
-                    <li class="sidebar-search">
-                        <!-- search section-->
-                        <div class="input-group custom-search-form">
-                            <input type="text" class="form-control" placeholder="Search...">
-                            <span class="input-group-btn">
-                                <button class="btn btn-default" type="button">
-                                    <i class="fa fa-search"></i>
-                                </button>
-                            </span>
-                        </div>
-                        <!--end search section-->
-                    </li>
-                    <li >
+                  
+                    <li class="selected">
                         <a href="admin.php"><i class="fa fa-dashboard fa-fw"></i>Dashboard</a>
                     </li>
                     <li>
@@ -203,18 +170,18 @@ function validateForm() {
                         </ul>
                         <!-- second-level-items -->
                     </li>
-                    <li>
-                       <a href="#"><i class="fa fa-medkit fa-fw"></i> Drugs<span class="fa arrow"></span></a>
-                       <ul class= "nav nav-second-level">
-                       <li>
-                       <a href="admin_stock.php">View Drugs</a>
-                       </li>
-                       <li>
-                       <a href="admin_add_med.php">Add Drugs</a>
-                       </li>
+                     <li>
+                        <a href="#"><i class="fa fa-medkit fa-fw"></i> Drugs<span class="fa arrow"></span></a>
+                        <ul class= "nav nav-second-level">
+                          <li>
+                          <a href="admin_stock.php">View Drugs</a>
+                          </li>
+                          <li>
+                          <a href="admin_add_med.php">Add Drugs</a>
+                          </li>
 
-                        </ul>
-                                    </li>
+                         </ul>
+                                     </li>
                     <li>
                         <a href="tables.html"><i class="fa fa-users fa-fw"></i> About Us</a>
                     </li>
@@ -226,133 +193,119 @@ function validateForm() {
 
                 </ul>
                 <!-- end side-menu -->
-
             </div>
             <!-- end sidebar-collapse -->
+        </nav>
+        <!-- end navbar side -->
+        <div id="page-wrapper">
 
+<div class="grid-form">
+     <!-- Page Header -->
+     <div class="col-lg-12">
+         <h1 class="page-header">New Medicine</h1>
+     </div>
+     <!--End Page Header -->
+ </div>
 
-		 <nav class="navbar navbar-default navbar-fixed-bottom" role="navigation" id="navbar">
-		 <div class="footer" align="Center"> life is good</div></nav>
+<div class="tab-content">
+             <div class="tab-pane active" id="horizontal-form">
 
-		 </nav>
+<form class="form-horizontal" name="package" method="post" enctype="multipart/form-data">
+ <div class="container-fluid">
+    
 
-		 <div id="page-wrapper">
-
-
-
-
-<div id="row" align="center">
-
-<div class="row">
-                <!-- Page Header -->
-                <div class="col-lg-12">
-                    <h1 class="page-header">New Medicine</h1>
-                </div>
-                <!--End Page Header -->
-            </div>
-<div class="row" align="left">
-			 <form name="myform" onsubmit="return validateForm(this);"  method="post" action="add_med.php">
-
-        <div class="form-row" align="left">
-          <div class="col-md-4"></div>
-          <div class="form-group col-md-4">
-            <label for="name">Drug Name:</label>
+   <div class="form-group">
+	<label for="focusedinput" class="col-sm-2 control-label">Drug name:</label>
+		<div class="col-sm-8">
             <input type="text"  id="drug_name" class="form-control" name="drug_name">
           </div>
         </div>
 
-        <div class="form-row" align="left">
-          <div class="col-md-4"></div>
-            <div class="form-group col-md-4">
-              <label for="category">Category:</label>
+        <div class="form-group">
+	<label for="focusedinput" class="col-sm-2 control-label">Category:</label>
+		<div class="col-sm-8">
               <input type="text" id="category" class="form-control" name="category">
             </div>
           </div>
 
 
-        <div class="form-row" align="left">
-          <div class="col-md-4"></div>
-            <div class="form-group col-md-4">
-              <label for="Description">Description:</label>
+        <div class="form-group">
+	<label for="focusedinput" class="col-sm-2 control-label">Description:</label>
+		<div class="col-sm-8">
               <input type="text" id="description" class="form-control" name="description">
             </div>
           </div>
 
 
-        <div class="form-row" align="left">
-          <div class="col-md-4"></div>
-            <div class="form-group col-md-4">
-              <label for="company">Company:</label>
+         <div class="form-group">
+	<label for="focusedinput" class="col-sm-2 control-label">Company:</label>
+		<div class="col-sm-8">
               <input type="text" id="company" class="form-control" name="company">
             </div>
           </div>
-		  <div class="form-row" align="left">
-          <div class="col-md-4"></div>
-            <div class="form-group col-md-4">
-              <label for="supplier">Supplier:</label>
+
+          <div class="form-group">
+	<label for="focusedinput" class="col-sm-2 control-label">Supplier:</label>
+		<div class="col-sm-8">
               <input type="text" id="supplier" class="form-control" name="supplier">
             </div>
           </div>
 
-                  <div class="form-row" align="left">
-          <div class="col-md-4"></div>
-            <div class="form-group col-md-4">
-              <label for="quantity">Quantity:</label>
-              <input type="int" class="form-control" name="quantity" id="quantity">
+               <div class="form-group">
+	<label for="focusedinput" class="col-sm-2 control-label">Quantity:</label>
+		<div class="col-sm-8">
+              <input type="number" class="form-control" name="quantity" id="quantity">
             </div>
           </div>
 
-
-
-		  <div class="form-row" align="left">
-          <div class="col-md-4"></div>
-            <div class="form-group col-md-4">
-              <label for="cost">Cost:</label>
-              <input type="int" id="cost" class="form-control" name="cost">
+		   <div class="form-group">
+	<label for="focusedinput" class="col-sm-2 control-label">Cost:</label>
+		<div class="col-sm-8">
+              <input type="number" id="cost" class="form-control" name="cost">
             </div>
           </div>
 
-
-
-                  <div class="form-row" align="left">
-          <div class="col-md-4"></div>
-		  <div class="form-group col-md-4"> <!-- Date input -->
-        <label  for="date">Expiring Date:</label>
+                 <div class="form-group">
+	<label for="focusedinput" class="col-sm-2 control-label">Expiry Date:</label>
+		<div class="col-sm-8">
         <input class="form-control" id="exp_date" name="exp_date" placeholder="MM/DD/YYY" type="date">
       </div>
                  </div>
 
-        <div class="form-row" align="left">
-          <div class="col-md-4"></div>
-            <div class="form-group col-md-4">
-            <button type="reset" value="reset" name="reset" class="btn btn-success" style="margin-left:38px">Cancel</button>
+                                  
+                                  <div class="form-row" align="left">
+                                    <div class="col-md-4"></div>
+                                      <div class="form-group col-md-4">
+                                      
+    <button type="reset" value="reset" name="reset" class="btn btn-primary" style="margin-left:38px">Cancel</button>
 
-            <button type="submit" value="submit" name="submit" class="btn btn-success" style="margin-left:38px">Add Medicine</button>
-          </div>
-        </div>
+                                      <button type="submit" value="submit" name="submit" class="btn btn-success" style="margin-left:38px">Submit</button>
+                                    </div>
+                                  </div>
+                                  </div>
+                                  
+                                  </form>
 
-      </form>
+</div>
 
-	  </div>
+</div>
+<!-- end page-wrapper -->
 
-        </div>
-        <!-- end page-wrapper -->
+</div>
+<!-- end wrapper -->
+<!-- Core Scripts - Include with every page -->
+<script src="assets/plugins/jquery-1.10.2.js"></script>
+<script src="assets/plugins/bootstrap/bootstrap.min.js"></script>
+<script src="assets/plugins/metisMenu/jquery.metisMenu.js"></script>
+<script src="assets/plugins/pace/pace.js"></script>
+<script src="assets/scripts/siminta.js"></script>
+<!-- Page-Level Plugin Scripts-->
+<script src="assets/plugins/morris/raphael-2.1.0.min.js"></script>
+<script src="assets/plugins/morris/morris.js"></script>
+<script src="assets/scripts/dashboard-demo.js"></script>
 
-    </div>
-    <!-- end wrapper -->
-
-
-	 <!-- Core Scripts - Include with every page -->
-    <script src="assets/plugins/jquery-1.10.2.js"></script>
-
-                 <script src="datepicker.min.js"></script>
-    <script src="assets/plugins/bootstrap/bootstrap.min.js"></script>
-    <script src="assets/plugins/metisMenu/jquery.metisMenu.js"></script>
-    <script src="assets/plugins/pace/pace.js"></script>
-    <script src="assets/scripts/siminta.js"></script>
-    <!-- Page-Level Plugin Scripts-->
-    <script src="assets/plugins/morris/raphael-2.1.0.min.js"></script>
-    <script src="assets/plugins/morris/morris.js"></script>
-    <script src="assets/scripts/dashboard-demo.js"></script>
 </body>
 </html>
+                              
+
+

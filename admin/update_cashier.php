@@ -1,30 +1,42 @@
 
 <?php
-  session_start();
-  include('connect_db.php');
-  if(isset($_SESSION['username'])){
-  $id=$_SESSION['admin_id'];
-  $user=$_SESSION['username'];
-  }else{
-  header("location:http://".$_SERVER['HTTP_HOST'].dirname($_SERVER['PHP_SELF'])."/index.php");
-  exit();
-  }
-   if(isset($_GET['username'])){
-	$user=$_GET['username'];
-	$result = mysql_query("SELECT * FROM cashier where username='$user'");
-		while($row = mysql_fetch_array($result))
-			{
-        $fname=$row['first_name'];
-        $lname=$row['last_name'];
-        $sid=$row['staff_id'];
-        $postal=$row['postal_address'];
-        $phone=$row['phone'];
-        $email=$row['email'];
-        $username=$row['username'];
-        $pas=$row['password'];
+session_start();
+error_reporting(0);
+include('connect_db.php');
+if(strlen($_SESSION['alogin'])==0)
+	{
+header('location:index.php');
 }
-			}
-?>
+else{
+$pid=intval($_GET['admin_id']);
+if(isset($_POST['update']))
+{
+$fname=$_POST['first_name'];
+$lname=$_POST['last_name'];
+$sid=$_POST['staff_id'];
+$postal=$_POST['postal_address'];
+$phone=$_POST['phone'];
+$email=$_POST['email'];
+$user=$_POST['username'];
+$pass=$_POST['password'];
+
+
+$sql="update cashier set first_name=:fname,last_name=:lname,staff_id=:sid,postal_address=:postal,phone=:phone,email=:email,password=:pass where username=:user";
+$query = $dbh->prepare($sql);
+$query->bindParam(':fname',$fname,PDO::PARAM_STR);
+$query->bindParam(':lname',$lname,PDO::PARAM_STR);
+$query->bindParam(':sid',$sid,PDO::PARAM_STR);
+$query->bindParam(':postal',$postal,PDO::PARAM_STR);
+$query->bindParam(':phone',$phone,PDO::PARAM_STR);
+$query->bindParam(':email',$email,PDO::PARAM_STR);
+$query->bindParam(':user',$user,PDO::PARAM_STR);
+$query->bindParam(':pass',$pass,PDO::PARAM_STR);
+$query->execute();
+echo "<script type='text/javascript'> document.location = 'admin_pharmacist.php'; </script>";
+}
+
+	?>
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -161,8 +173,8 @@
                             </div>
                             <div class="user-info">
                                 <?php  session_start();
-							if(!empty($_SESSION["username"])) {
-						   echo "Hello, {$_SESSION["username"]}";
+							if(!empty($_SESSION["alogin"])) {
+                                echo htmlentities($_SESSION['alogin']);
 							}
 							else{
 							  echo "You're not logged in!!";
@@ -217,11 +229,11 @@
                         <a href="#"><i class="fa fa-medkit fa-fw"></i> Drugs<span class="fa arrow"></span></a>
                         <ul class= "nav nav-second-level">
                         <li>
-                        <a href="#">View Drugs</a>
-                        </li>
-                        <li>
-                        <a href="#">Add Drugs</a>
-                        </li>
+                          <a href="admin_stock.php">View Drugs</a>
+                          </li>
+                          <li>
+                          <a href="admin_add_med.php">Add Drugs</a>
+                          </li>
 
                          </ul>
                                      </li>
@@ -242,7 +254,7 @@
         <!-- end navbar side -->
         <div id="page-wrapper">
 
-            <div class="row">
+           <div class="grid-form">
                 <!-- Page Header -->
                 <div class="col-lg-12">
                     <h1 class="page-header">Update Cashier</h1>
@@ -250,76 +262,88 @@
                 <!--End Page Header -->
             </div>
 
-<div class="row" align="left">
-  <form name="myform" onsubmit="return validateForm(this);"  method="post" action="cash.php">
+  <div class="tab-content">
+						<div class="tab-pane active" id="horizontal-form">
 
-  <div class="form-row" align="left">
-      <div class="col-md-4"></div>
-        <div class="form-group col-md-4">
-          <label for="name">Firstname:</label>
-          <input type="text" id="first_name"  class="form-control" name="first_name" value="<?php echo $fname ?>">
+<?php
+$pid=intval($_GET['pid']);
+$sql = "SELECT * from cashier where cashier_id=:pid";
+$query = $dbh -> prepare($sql);
+$query -> bindParam(':pid', $pid, PDO::PARAM_STR);
+$query->execute();
+
+$results=$query->fetchAll(PDO::FETCH_OBJ);
+
+$cnt=1;
+if($query->rowCount() > 0)
+{
+foreach($results as $result)
+{	?>
+
+
+
+  <form class="form-horizontal" name="package" method="post" enctype="multipart/form-data">
+
+  <div class="form-group">
+	<label for="focusedinput" class="col-sm-2 control-label">First name:</label>
+		<div class="col-sm-8">
+          <input type="text" id="first_name"  class="form-control1" name="first_name" value="<?php echo htmlentities($result->first_name);?>" required>
         </div>
       </div>
 
-      <div class="form-row" align="left">
-          <div class="col-md-4"></div>
-            <div class="form-group col-md-4">
-              <label for="name">Lastname:</label>
-              <input type="text" id="last_name" class="form-control" name="last_name" value="<?php echo $lname ?>">
+     <div class="form-group">
+	<label for="focusedinput" class="col-sm-2 control-label">Last name:</label>
+		<div class="col-sm-8">
+              <input type="text" id="last_name" class="form-control" name="last_name" value="<?php echo htmlentities($result->last_name);?>" required>
             </div>
           </div>
 
-          <div class="form-row" align="left">
-              <div class="col-md-4"></div>
-                <div class="form-group col-md-4">
-                  <label for="staffid">Staff ID:</label>
-                  <input type="text" id="staff_id" placeholder="staffid" class="form-control" name="staff_id" value="<?php echo $sid ?>">
+          <div class="form-group">
+	<label for="focusedinput" class="col-sm-2 control-label">Staff ID:</label>
+		<div class="col-sm-8">
+                  <input type="text" id="staff_id" placeholder="staffid" class="form-control" name="staff_id" value="<?php echo htmlentities($result->staff_id);?>" required>
                 </div>
               </div>
 
-              <div class="form-row" align="left">
-                  <div class="col-md-4"></div>
-                    <div class="form-group col-md-4">
-                      <label for="address">Postal Address:</label>
-                      <input type="text" id="postal_address" class="form-control" name="postal_address" value="<?php echo $postal ?>">
+             <div class="form-group">
+	<label for="focusedinput" class="col-sm-2 control-label">Postal Address:</label>
+		<div class="col-sm-8">
+                      <input type="text" id="postal_address" class="form-control" name="postal_address" value="<?php echo htmlentities($result->postal_address);?>" required>
                     </div>
                   </div>
 
-                  <div class="form-row" align="left">
-                      <div class="col-md-4"></div>
-                        <div class="form-group col-md-4">
-                          <label for="phone">Phone:</label>
-                          <input type="text" id="phone" class="form-control" name="phone" value="<?php echo $phone ?>">
+                  <div class="form-group">
+	<label for="focusedinput" class="col-sm-2 control-label">Phone Number:</label>
+		<div class="col-sm-8">
+                          <input type="text" id="phone" class="form-control" name="phone" value="<?php echo htmlentities($result->phone);?>" required>
                         </div>
                       </div>
 
-                      <div class="form-row" align="left">
-                          <div class="col-md-4"></div>
-                            <div class="form-group col-md-4">
-                              <label for="email">Email:</label>
-                              <input type="email" id="email" class="form-control" name="email" value="<?php echo $email ?>">
+                      <div class="form-group">
+	<label for="focusedinput" class="col-sm-2 control-label">Email Address:</label>
+		<div class="col-sm-8">
+                              <input type="email" id="email" class="form-control" name="email" value="<?php echo htmlentities($result->email);?>" required>
                             </div>
                           </div>
 
-                          <div class="form-row" align="left">
-                              <div class="col-md-4"></div>
-                                <div class="form-group col-md-4">
-                                  <label for="username">Username:</label>
-                                  <input type="text" id="username" class="form-control" name="username" value="<?php echo $username ?>">
+                          <div class="form-group">
+	<label for="focusedinput" class="col-sm-2 control-label">Username:</label>
+		<div class="col-sm-8">
+                                  <input type="text" id="username" class="form-control" name="username" value="<?php echo htmlentities($result->username);?>" required>
                                 </div>
                               </div>
 
-                              <div class="form-row" align="left">
-                                  <div class="col-md-4"></div>
-                                    <div class="form-group col-md-4">
-                                      <label for="password">Password:</label>
-                                      <input type="password" id="password" class="form-control" name="password" value="<?php echo $pas ?>">
+                             <div class="form-group">
+	<label for="focusedinput" class="col-sm-2 control-label">Password:</label>
+		<div class="col-sm-8">
+                                      <input type="password" id="password" class="form-control" name="password" value="<?php echo htmlentities($result->password);?>" required>
                                     </div>
                                   </div>
+                                  <?php }} ?>
                                   <div class="form-row" align="left">
                                     <div class="col-md-4"></div>
                                       <div class="form-group col-md-4">
-                                      <button type="reset" value="reset" name="reset" class="btn btn-success" style="margin-left:38px">Cancel</button>
+                                      
 
                                       <button type="submit" value="update" name="update" class="btn btn-success" style="margin-left:38px">Update</button>
                                     </div>
@@ -347,3 +371,4 @@
 
 </body>
 </html>
+<?php } ?>

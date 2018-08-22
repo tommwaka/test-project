@@ -206,18 +206,7 @@ echo "<script type='text/javascript'> document.location = 'admin_pharmacist.php'
                         </div>
                         <!--end user image section-->
                     </li>
-                    <li class="sidebar-search">
-                        <!-- search section-->
-                        <div class="input-group custom-search-form">
-                            <input type="text" class="form-control" placeholder="Search...">
-                            <span class="input-group-btn">
-                                <button class="btn btn-default" type="button">
-                                    <i class="fa fa-search"></i>
-                                </button>
-                            </span>
-                        </div>
-                        <!--end search section-->
-                    </li>
+                   
                     <li class="selected">
                         <a href="admin.php"><i class="fa fa-dashboard fa-fw"></i>Dashboard</a>
                     </li>
@@ -283,37 +272,48 @@ echo "<script type='text/javascript'> document.location = 'admin_pharmacist.php'
 
 
 <div id="tab_content_1" class="tab active">
-<?php
-include_once('connect_db.php');
-$result=mysql_query("select * from pharmacist")or die(mysql_error);
+<form name="chngpwd" method="post" onSubmit="return valid();">
+          		
+          	<p>
+          	<table border="" width="100%" class="table table-striped">
+          <tr align="center">
+          <th>#</th>
+          <th>Staff ID</th>
+   <th>Firstname</th>
+   <th>Lastname</th>
+   <th>Username</th>
+   <th>Update</th>
+   <th>Delete</th>
+          </tr>
+          <?php
+include ('connect_db.php');
 
-    echo "<table boarder='1' cell padding='5' align='center'>
- <tr>
-<th>ID</th>
-<th>Firstname</th>
-<th>Lastname</th>
-<th>Username</th>
-<th>Update</th>
-<th>Delete</th></tr>";
-while($row=mysql_fetch_array($result)){
-  echo "<tr>";
-  echo '<td>'.$row['pharmacist_id'].'</td>';
-  echo '<td>'.$row['first_name'].'</td>';
-  echo '<td>'.$row['last_name'].'</td>';
-  echo '<td>'.$row['username'].'</td>';
-  ?>
-<td><a href="update_pharmacist.php?username=<?php echo $row['username']?>"><img src="images/update-icon.png" width="35" height="35" border="0" /></a></td>
-<td><a href="del_pharmacist.php?pharmacist_id=<?php echo $row['pharmacist_id']?>"><img src="images/delete-icon.jpg" width="35" height="35" border="0" /></a></td>
-<?php
-   }
-      // close table>
-      echo "</table>";
+          $sql = "SELECT * from pharmacist ";
+          $query = $dbh->prepare($sql);
+          $query->execute();
+          $results=$query->fetchAll(PDO::FETCH_OBJ);
+          $cnt=1;
+          if($query->rowCount() > 0)
+          { 
+          foreach($results as $result)
+          {	?>
+           
+          <tr align="center">
+          <td><?php echo htmlentities($cnt);?></td>
+          <td><?php echo htmlentities($result->staff_id);?></td>
+            <td><?php echo htmlentities($result->first_name);?></td>
+            <td><?php echo htmlentities($result->last_name);?></td>
+             <td><?php echo htmlentities($result->username);?></td>
+          <td> <a href="update_pharmacist.php?pid=<?php echo htmlentities($result -> pharmacist_id);?>" class= "btn btn-success" >update</a></td>
+          <td> <a href="del_pharm.php?pharmacist_id=<?php echo htmlentities($result -> pharmacist_id);?>" class= "btn btn-warning" >Delete</a></td>
+          </tr>
+          <?php $cnt=$cnt+1; }} ?>
+          	</table>
 
-?>
+          			</p>
+                      <button formaction="add_pharmacist.php" class= "btn btn-success">New Pharmacist</button>
+          			</form>
 
-<form>
-  <button formaction="add_pharmacist.php">New Pharmacist</button>
-</form>
   		</div>
 
 

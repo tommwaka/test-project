@@ -75,8 +75,8 @@
                             </div>
                             <div class="user-info">
                                 <?php  session_start();
-							if(!empty($_SESSION["username"])) {
-						   echo "Hello, {$_SESSION["username"]}";
+							if(!empty($_SESSION["alogin"])) {
+						   echo htmlentities($_SESSION["alogin"]);
 							}
 							else{
 							  echo "You're not logged in!!";
@@ -90,18 +90,7 @@
                         </div>
                         <!--end user image section-->
                     </li>
-                    <li class="sidebar-search">
-                        <!-- search section-->
-                        <div class="input-group custom-search-form">
-                            <input type="text" class="form-control" placeholder="Search...">
-                            <span class="input-group-btn">
-                                <button class="btn btn-default" type="button">
-                                    <i class="fa fa-search"></i>
-                                </button>
-                            </span>
-                        </div>
-                        <!--end search section-->
-                    </li>
+                   
                     <li class="selected">
                         <a href="admin.php"><i class="fa fa-dashboard fa-fw"></i>Dashboard</a>
                     </li>
